@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, RotateCcw } from 'lucide-react';
 import { destinations, Destination } from '../data/travelData';
 import DestinationCard from './DestinationCard';
 import DestinationModal from './DestinationModal';
+import { useTravel } from '../context/TravelContext';
 
 const filterTypes = [
   { id: 'all', label: 'All' },
@@ -14,18 +14,30 @@ const filterTypes = [
 ];
 
 const Destinations = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [selectedDestination, setSelectedDestination] = useState<Destination | null>(null);
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedFilter,
+    setSelectedFilter,
+    activeModalDestination,
+    openDestinationModal,
+    closeDestinationModal,
+  } = useTravel();
 
   const filteredDestinations = destinations.filter((dest) => {
     const matchesSearch =
       dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      dest.country.toLowerCase().includes(searchQuery.toLowerCase());
+      dest.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      dest.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesFilter =
-      activeFilter === 'all' || dest.type.includes(activeFilter as any);
+      selectedFilter === 'all' || dest.type.includes(selectedFilter as Destination['type'][number]);
     return matchesSearch && matchesFilter;
   });
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setSelectedFilter('all');
+  };
 
   return (
     <section id="destinations" className="py-20 bg-background">
@@ -49,7 +61,7 @@ const Destinations = () => {
               placeholder="Search destinations..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all text-sm"
             />
           </div>
 
@@ -59,10 +71,10 @@ const Destinations = () => {
             {filterTypes.map((filter) => (
               <button
                 key={filter.id}
-                onClick={() => setActiveFilter(filter.id)}
+                onClick={() => setSelectedFilter(filter.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                  activeFilter === filter.id
-                    ? 'bg-primary text-primary-foreground'
+                  selectedFilter === filter.id
+                    ? 'bg-primary text-primary-foreground shadow-md'
                     : 'bg-muted text-muted-foreground hover:bg-muted/80'
                 }`}
               >
@@ -72,17 +84,34 @@ const Destinations = () => {
           </div>
         </div>
 
+        {/* Search status info if filter or search active */}
+        {(searchQuery || selectedFilter !== 'all') && (
+          <div className="mb-6 flex items-center justify-between bg-muted/50 px-4 py-2 rounded-xl text-sm text-muted-foreground">
+            <span>
+              Showing {filteredDestinations.length} destination(s)
+              {searchQuery && ` for "${searchQuery}"`}
+              {selectedFilter !== 'all' && ` under ${selectedFilter}`}
+            </span>
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 text-primary hover:underline font-medium"
+            >
+              <RotateCcw className="w-3.5 h-3.5" /> Clear filters
+            </button>
+          </div>
+        )}
+
         {/* Destinations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
           {filteredDestinations.map((destination, index) => (
             <div
               key={destination.id}
-              className="opacity-0 animate-fade-up"
+              className="opacity-0 animate-fade-up h-full"
               style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'forwards' }}
             >
               <DestinationCard
                 destination={destination}
-                onClick={() => setSelectedDestination(destination)}
+                onClick={() => openDestinationModal(destination)}
               />
             </div>
           ))}
@@ -90,16 +119,19 @@ const Destinations = () => {
 
         {/* No Results */}
         {filteredDestinations.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No destinations found. Try a different search or filter.</p>
+          <div className="text-center py-16 bg-card rounded-2xl border border-border p-8">
+            <p className="text-muted-foreground text-lg mb-4">No destinations match your search criteria.</p>
+            <button onClick={clearFilters} className="btn-primary py-2 px-6 text-sm">
+              Reset Filters
+            </button>
           </div>
         )}
 
         {/* Modal */}
-        {selectedDestination && (
+        {activeModalDestination && (
           <DestinationModal
-            destination={selectedDestination}
-            onClose={() => setSelectedDestination(null)}
+            destination={activeModalDestination}
+            onClose={closeDestinationModal}
           />
         )}
       </div>

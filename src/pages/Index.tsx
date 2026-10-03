@@ -8,6 +8,8 @@ import Gallery from '../components/Gallery';
 import Testimonials from '../components/Testimonials';
 import Contact from '../components/Contact';
 import Footer from '../components/Footer';
+import WishlistDrawer from '../components/WishlistDrawer';
+import { TravelProvider } from '../context/TravelContext';
 
 const Index = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -37,17 +39,20 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-      <Hero />
-      <Destinations />
-      <TripPlanner />
-      <Packages />
-      <Gallery />
-      <Testimonials />
-      <Contact />
-      <Footer />
-    </div>
+    <TravelProvider>
+      <div className="min-h-screen bg-background">
+        <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+        <Hero />
+        <Destinations />
+        <TripPlanner />
+        <Packages />
+        <Gallery />
+        <Testimonials />
+        <Contact />
+        <Footer />
+        <WishlistDrawer />
+      </div>
+    </TravelProvider>
   );
 };
 

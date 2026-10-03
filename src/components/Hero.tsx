@@ -1,6 +1,24 @@
-import { ChevronDown, MapPin, Calendar, Users } from 'lucide-react';
+import { useState } from 'react';
+import { ChevronDown, MapPin, Calendar, Users, Search as SearchIcon } from 'lucide-react';
+import { useTravel } from '../context/TravelContext';
 
 const Hero = () => {
+  const [localDestination, setLocalDestination] = useState('');
+  const [localDate, LocalDate] = useState('');
+  const [localGuests, setLocalGuests] = useState('');
+  const { setSearchQuery } = useTravel();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localDestination.trim()) {
+      setSearchQuery(localDestination.trim());
+    }
+    const destSection = document.getElementById('destinations');
+    if (destSection) {
+      destSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -18,7 +36,7 @@ const Hero = () => {
       <div className="absolute bottom-1/3 right-10 w-32 h-32 rounded-full bg-secondary/20 blur-3xl animate-float delay-200" />
 
       {/* Content */}
-      <div className="relative z-10 container mx-auto px-4 text-center text-white">
+      <div className="relative z-10 container mx-auto px-4 text-center text-white pt-20">
         <div className="max-w-4xl mx-auto">
           <p className="text-primary font-medium mb-4 animate-fade-up tracking-widest uppercase">
             Discover the World
@@ -32,46 +50,54 @@ const Hero = () => {
           </p>
 
           {/* Search Box */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 md:p-6 max-w-4xl mx-auto animate-fade-up delay-300">
+          <form onSubmit={handleSearch} className="bg-white/10 backdrop-blur-lg rounded-2xl p-4 md:p-6 max-w-4xl mx-auto animate-fade-up delay-300">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 text-left">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
+                <div className="w-full">
                   <p className="text-xs text-white/60">Destination</p>
                   <input
                     type="text"
-                    placeholder="Where to?"
-                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full"
+                    placeholder="Where to? (e.g. Bali)"
+                    value={localDestination}
+                    onChange={(e) => setLocalDestination(e.target.value)}
+                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full text-sm"
                   />
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 text-left">
                 <Calendar className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
+                <div className="w-full">
                   <p className="text-xs text-white/60">Date</p>
                   <input
-                    type="text"
-                    placeholder="Select dates"
-                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full"
+                    type="date"
+                    value={localDate}
+                    onChange={(e) => LocalDate(e.target.value)}
+                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full text-sm [color-scheme:dark]"
                   />
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-white/10 rounded-xl px-4 py-3 text-left">
                 <Users className="w-5 h-5 text-primary flex-shrink-0" />
-                <div>
+                <div className="w-full">
                   <p className="text-xs text-white/60">Travelers</p>
                   <input
-                    type="text"
+                    type="number"
+                    min="1"
+                    max="20"
                     placeholder="Guests"
-                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full"
+                    value={localGuests}
+                    onChange={(e) => setLocalGuests(e.target.value)}
+                    className="bg-transparent border-none outline-none text-white placeholder-white/60 w-full text-sm"
                   />
                 </div>
               </div>
-              <button className="btn-primary flex items-center justify-center gap-2 text-base">
+              <button type="submit" className="btn-primary flex items-center justify-center gap-2 text-base w-full">
+                <SearchIcon className="w-5 h-5" />
                 Search
               </button>
             </div>
-          </div>
+          </form>
 
           {/* Stats */}
           <div className="flex flex-wrap justify-center gap-8 md:gap-16 mt-12 animate-fade-up delay-400">

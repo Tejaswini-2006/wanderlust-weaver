@@ -25,7 +25,9 @@ const Testimonials = () => {
 
   // Auto-advance
   useEffect(() => {
-    const interval = setInterval(goToNext, 5000);
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % testimonials.length);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Sparkles, MapPin, DollarSign, Calendar, ArrowRight } from 'lucide-react';
+import { Sparkles, MapPin, DollarSign, Calendar, ArrowRight, Heart } from 'lucide-react';
 import { destinations, tripTypes, budgetRanges, durationOptions, Destination } from '../data/travelData';
+import { useTravel } from '../context/TravelContext';
 
 const TripPlanner = () => {
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -8,6 +9,7 @@ const TripPlanner = () => {
   const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<Destination[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const { openDestinationModal, selectForBooking, isFavorite, toggleFavorite } = useTravel();
 
   const generateSuggestions = () => {
     if (!selectedType || !selectedBudget || !selectedDuration) return;
@@ -16,15 +18,22 @@ const TripPlanner = () => {
     const durationRange = durationOptions.find(d => d.id === selectedDuration);
 
     const filtered = destinations.filter((dest) => {
-      const matchesType = dest.type.includes(selectedType as any);
-      const matchesBudget = budgetRange && dest.price <= budgetRange.max;
+      const matchesType = dest.type.includes(selectedType as Destination['type'][number]);
+      const matchesBudget = budgetRange ? dest.price <= budgetRange.max : true;
       return matchesType && matchesBudget;
     });
 
     // Sort by rating
     const sorted = filtered.sort((a, b) => b.rating - a.rating);
     
-    setSuggestions(sorted.slice(0, 3));
+    // If no exact match, fallback to highest rated destinations of selected type
+    if (sorted.length === 0) {
+      const fallback = destinations.filter(d => d.type.includes(selectedType as Destination['type'][number]));
+      setSuggestions(fallback.slice(0, 3));
+    } else {
+      setSuggestions(sorted.slice(0, 3));
+    }
+
     setShowResults(true);
   };
 
@@ -131,7 +140,7 @@ const TripPlanner = () => {
               <button
                 onClick={generateSuggestions}
                 disabled={!selectedType || !selectedBudget || !selectedDuration}
-                className="btn-primary text-lg px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                className="btn-primary text-lg px-10 py-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto shadow-lg"
               >
                 <Sparkles className="w-5 h-5" />
                 Get Suggestions
@@ -151,45 +160,81 @@ const TripPlanner = () => {
             </div>
 
             {suggestions.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-                {suggestions.map((dest, index) => (
-                  <div
-                    key={dest.id}
-                    className={`card-travel overflow-hidden ${index === 0 ? 'md:scale-105 ring-2 ring-primary' : ''}`}
-                  >
-                    {index === 0 && (
-                      <div className="bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
-                        ⭐ Top Pick
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 items-stretch">
+                {suggestions.map((dest, index) => {
+                  const favorite = isFavorite(dest.id);
+                  return (
+                    <div
+                      key={dest.id}
+                      className={`card-travel overflow-hidden flex flex-col justify-between ${index === 0 ? 'md:scale-105 ring-2 ring-primary z-10' : ''}`}
+                    >
+                      <div>
+                        {index === 0 && (
+                          <div className="bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
+                            ⭐ Top Pick
+                          </div>
+                        )}
+                        <div className="relative h-48">
+                          <img
+                            src={dest.image}
+                            alt={dest.name}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => openDestinationModal(dest)}
+                          />
+                          <button
+                            onClick={() => toggleFavorite(dest.id)}
+                            className={`absolute top-4 left-4 p-2 rounded-full backdrop-blur-md transition-all ${
+                              favorite ? 'bg-primary text-primary-foreground' : 'bg-black/30 text-white'
+                            }`}
+                          >
+                            <Heart className={`w-4 h-4 ${favorite ? 'fill-current' : ''}`} />
+                          </button>
+                          <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">
+                            ${dest.price}
+                          </div>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-center gap-1 text-muted-foreground text-sm mb-1">
+                            <MapPin className="w-4 h-4" />
+                            {dest.country}
+                          </div>
+                          <h4
+                            onClick={() => openDestinationModal(dest)}
+                            className="text-xl font-display font-semibold text-foreground mb-2 cursor-pointer hover:text-primary transition-colors"
+                          >
+                            {dest.name}
+                          </h4>
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{dest.description}</p>
+                        </div>
                       </div>
-                    )}
-                    <div className="relative h-48">
-                      <img
-                        src={dest.image}
-                        alt={dest.name}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-4 right-4 bg-primary text-primary-foreground px-3 py-1 rounded-full text-sm font-semibold">
-                        ${dest.price}
+
+                      <div className="p-5 pt-0 space-y-3">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>Best: {dest.bestTime}</span>
+                          <span>{dest.duration}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => openDestinationModal(dest)}
+                            className="btn-outline flex-1 text-xs py-2 px-2"
+                          >
+                            Details
+                          </button>
+                          <button
+                            onClick={() => selectForBooking(dest.name)}
+                            className="btn-primary flex-1 text-xs py-2 px-2"
+                          >
+                            Book Now
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="p-5">
-                      <div className="flex items-center gap-1 text-muted-foreground text-sm mb-1">
-                        <MapPin className="w-4 h-4" />
-                        {dest.country}
-                      </div>
-                      <h4 className="text-xl font-display font-semibold text-foreground mb-2">{dest.name}</h4>
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{dest.description}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-accent font-medium">{dest.bestTime}</span>
-                        <button className="btn-primary text-sm py-2 px-4">View Details</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12 bg-card rounded-2xl">
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-lg mb-4">
                   No destinations match your criteria. Try adjusting your preferences!
                 </p>
               </div>

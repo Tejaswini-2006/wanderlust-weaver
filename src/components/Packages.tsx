@@ -1,7 +1,10 @@
 import { Check, ArrowRight } from 'lucide-react';
 import { packages } from '../data/travelData';
+import { useTravel } from '../context/TravelContext';
 
 const Packages = () => {
+  const { selectForBooking } = useTravel();
+
   return (
     <section id="packages" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -19,76 +22,80 @@ const Packages = () => {
           {packages.map((pkg, index) => (
             <div
               key={pkg.id}
-              className={`card-travel overflow-hidden ${
-                index === 1 ? 'lg:scale-105 ring-2 ring-primary' : ''
+              className={`card-travel overflow-hidden flex flex-col justify-between ${
+                index === 1 ? 'lg:scale-105 ring-2 ring-primary z-10' : ''
               }`}
             >
-              {/* Popular Badge */}
-              {index === 1 && (
-                <div className="bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
-                  🔥 Most Popular
-                </div>
-              )}
+              <div>
+                {/* Popular Badge */}
+                {index === 1 && (
+                  <div className="bg-primary text-primary-foreground text-center py-2 text-sm font-medium">
+                    🔥 Most Popular
+                  </div>
+                )}
 
-              {/* Image */}
-              <div className="relative h-56">
-                <img
-                  src={pkg.image}
-                  alt={pkg.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                
-                {/* Discount Badge */}
-                <div className="absolute top-4 left-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
-                  Save ${pkg.originalPrice - pkg.price}
+                {/* Image */}
+                <div className="relative h-56">
+                  <img
+                    src={pkg.image}
+                    alt={pkg.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  
+                  {/* Discount Badge */}
+                  <div className="absolute top-4 left-4 bg-accent text-accent-foreground px-3 py-1 rounded-full text-sm font-bold">
+                    Save ${pkg.originalPrice - pkg.price}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-2xl font-display font-bold text-foreground mb-2">
+                    {pkg.name}
+                  </h3>
+                  
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {pkg.destinations.map((dest) => (
+                      <span
+                        key={dest}
+                        className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium"
+                      >
+                        {dest}
+                      </span>
+                    ))}
+                  </div>
+
+                  <p className="text-muted-foreground text-sm mb-4">
+                    {pkg.duration} • All inclusive
+                  </p>
+
+                  {/* Includes */}
+                  <div className="space-y-2 mb-6">
+                    {pkg.includes.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-accent" />
+                        <span className="text-sm text-foreground">{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-2xl font-display font-bold text-foreground mb-2">
-                  {pkg.name}
-                </h3>
-                
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {pkg.destinations.map((dest) => (
-                    <span
-                      key={dest}
-                      className="px-3 py-1 bg-muted text-muted-foreground rounded-full text-xs"
-                    >
-                      {dest}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="text-muted-foreground text-sm mb-4">
-                  {pkg.duration} • All inclusive
-                </p>
-
-                {/* Includes */}
-                <div className="space-y-2 mb-6">
-                  {pkg.includes.map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-accent" />
-                      <span className="text-sm text-foreground">{item}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Price */}
+              {/* Price & CTA */}
+              <div className="p-6 pt-0">
                 <div className="flex items-end gap-2 mb-6">
                   <span className="text-3xl font-bold text-foreground">${pkg.price}</span>
                   <span className="text-muted-foreground line-through">${pkg.originalPrice}</span>
                   <span className="text-sm text-muted-foreground">/ person</span>
                 </div>
 
-                {/* CTA */}
-                <button className={`w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
-                  index === 1
-                    ? 'btn-primary'
-                    : 'btn-outline'
-                }`}>
+                <button
+                  onClick={() => selectForBooking(`Package: ${pkg.name}`)}
+                  className={`w-full py-3 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                    index === 1 ? 'btn-primary shadow-md' : 'btn-outline'
+                  }`}
+                >
                   Book Package
                   <ArrowRight className="w-4 h-4" />
                 </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Menu, X, Sun, Moon, Plane } from 'lucide-react';
+import { Menu, X, Sun, Moon, Plane, Heart } from 'lucide-react';
+import { useTravel } from '../context/TravelContext';
 
 interface NavbarProps {
   darkMode: boolean;
@@ -9,6 +10,7 @@ interface NavbarProps {
 const Navbar = ({ darkMode, toggleDarkMode }: NavbarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { favorites, setIsWishlistOpen } = useTravel();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -61,7 +63,25 @@ const Navbar = ({ darkMode, toggleDarkMode }: NavbarProps) => {
         </div>
 
         {/* Right side actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* Wishlist button */}
+          <button
+            onClick={() => setIsWishlistOpen(true)}
+            className={`relative p-2 rounded-full transition-all duration-300 hover:scale-110 ${
+              scrolled ? 'bg-muted hover:bg-muted/80' : 'bg-white/10 hover:bg-white/20'
+            }`}
+            aria-label="View Saved Wishlist"
+            title="Saved Destinations"
+          >
+            <Heart className={`w-5 h-5 ${favorites.length > 0 ? 'fill-primary text-primary' : (scrolled ? 'text-foreground' : 'text-white')}`} />
+            {favorites.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center animate-scale-in">
+                {favorites.length}
+              </span>
+            )}
+          </button>
+
+          {/* Theme toggle */}
           <button
             onClick={toggleDarkMode}
             className={`p-2 rounded-full transition-all duration-300 hover:scale-110 ${
@@ -111,6 +131,20 @@ const Navbar = ({ darkMode, toggleDarkMode }: NavbarProps) => {
               {link.label}
             </a>
           ))}
+          <button
+            onClick={() => {
+              setIsOpen(false);
+              setIsWishlistOpen(true);
+            }}
+            className="flex items-center justify-between py-3 px-4 rounded-lg text-foreground bg-muted/60 font-medium"
+          >
+            <span className="flex items-center gap-2">
+              <Heart className="w-4 h-4 text-primary fill-primary" /> Wishlist
+            </span>
+            <span className="bg-primary text-primary-foreground text-xs px-2 py-0.5 rounded-full font-bold">
+              {favorites.length}
+            </span>
+          </button>
           <a
             href="#contact"
             onClick={() => setIsOpen(false)}

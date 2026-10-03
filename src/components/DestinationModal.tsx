@@ -1,5 +1,6 @@
-import { X, Star, MapPin, Clock, Calendar, Check } from 'lucide-react';
+import { X, Star, MapPin, Clock, Calendar, Check, Heart } from 'lucide-react';
 import { Destination } from '../data/travelData';
+import { useTravel } from '../context/TravelContext';
 
 interface DestinationModalProps {
   destination: Destination;
@@ -7,6 +8,14 @@ interface DestinationModalProps {
 }
 
 const DestinationModal = ({ destination, onClose }: DestinationModalProps) => {
+  const { isFavorite, toggleFavorite, selectForBooking } = useTravel();
+  const favorite = isFavorite(destination.id);
+
+  const handleBookNow = () => {
+    onClose();
+    selectForBooking(destination.name);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -17,13 +26,24 @@ const DestinationModal = ({ destination, onClose }: DestinationModalProps) => {
 
       {/* Modal Content */}
       <div className="relative bg-card rounded-3xl overflow-hidden max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-scale-in shadow-2xl">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/20 backdrop-blur-md text-white hover:bg-black/30 transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Top Action Buttons */}
+        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+          <button
+            onClick={() => toggleFavorite(destination.id)}
+            className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+              favorite ? 'bg-primary text-primary-foreground' : 'bg-black/30 text-white hover:bg-black/50'
+            }`}
+            title={favorite ? 'Remove from Wishlist' : 'Add to Wishlist'}
+          >
+            <Heart className={`w-5 h-5 ${favorite ? 'fill-current' : ''}`} />
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full bg-black/30 backdrop-blur-md text-white hover:bg-black/50 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* Image */}
         <div className="relative h-72 md:h-96">
@@ -114,10 +134,10 @@ const DestinationModal = ({ destination, onClose }: DestinationModalProps) => {
               </p>
             </div>
             <div className="flex gap-3 w-full md:w-auto">
-              <button className="btn-outline flex-1 md:flex-none">
-                Learn More
+              <button onClick={onClose} className="btn-outline flex-1 md:flex-none">
+                Close
               </button>
-              <button className="btn-primary flex-1 md:flex-none">
+              <button onClick={handleBookNow} className="btn-primary flex-1 md:flex-none">
                 Book Now
               </button>
             </div>
